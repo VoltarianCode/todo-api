@@ -36,18 +36,22 @@ app.get('/todos/:id', function(req, res){
 
 app.post('/todos', function (req, res){
 	var body = req.body;
+	body = _.pick(body, 'description', 'completed');
 	if(!_.isString(body.description) 
 		|| !_.isBoolean(body.completed) 
 		|| body.description.trim().length == 0){
 
 		return res.status(400).send();
-	} else {
-		body.id = todoNextId++;
-		todos.push(body);
+	}
 
-		console.log('description ' + body.description);
-		res.json(body);
-	} 
+
+	body.description = body.description.trim();
+	body.id = todoNextId++;
+	todos.push(body);
+
+	console.log('description ' + body.description);
+	res.json(body);
+	
 
 
 	
