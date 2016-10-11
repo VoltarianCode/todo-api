@@ -1,14 +1,13 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+var bcrypt = require('bcrypt');
 
 var db = require('./db.js');
 
 
 var app = express();
 var PORT = process.env.PORT || 3000;
-
-var todos = [];
 
 app.use(bodyParser.json());
 
@@ -99,8 +98,6 @@ app.put('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id);
 	var attributes = {};
 
-	var validAttributes = {};
-
 	if (body.hasOwnProperty('completed')) {
 		attributes.completed = body.completed;
 	}
@@ -124,9 +121,9 @@ app.put('/todos/:id', function(req, res) {
 		res.status(500).send();
 	});
 
-	//JS passes by reference so matchedTodo will actually be updated inside todos array
-
 });
+
+// POST /users
 
 app.post('/users', function(req, res) {
 	var body = _.pick(req.body, 'email', 'password');
@@ -138,7 +135,17 @@ app.post('/users', function(req, res) {
 
 });
 
+// POST /users/login
 
+app.post('/users/login', function(req, res){
+	var body = _.pick(req.body, 'email', 'password');
+	db.user.authenticate(body).then(function(user){
+		res.json(user.toPublicJSON());
+	}, function(e){
+		res.status(401).send();
+	});
+
+});
 
 
 
@@ -147,3 +154,6 @@ db.sequelize.sync().then(function() {
 		console.log('Express server started on port ' + PORT);
 	});
 });
+
+
+
