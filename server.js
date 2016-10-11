@@ -32,7 +32,7 @@ app.get('/todos', function(req, res) {
 			$like: "%" + query.q + "%"
 		}
 	}
-	
+
 	db.todo.findAll({
 		where: where
 	}).then(function(todos) {
@@ -77,59 +77,52 @@ app.delete('/todos/:id', function(req, res) {
 		where: {
 			id: todoId
 		}
-	}).then(function(rowsDeleted){
-		if (rowsDeleted === 0){
+	}).then(function(rowsDeleted) {
+		if (rowsDeleted === 0) {
 			res.status(404).json({
 				"error": "no todo with that id"
 			});
 		} else {
 			res.status(204).send();
 		}
-	}, function(e){
+	}, function(e) {
 		res.status(500).send();
 	});
-	
+
 
 });
 
 // PUT /todos/:id
 
 app.put('/todos/:id', function(req, res) {
-	var body = req.body;
+	var body = _.pick(req.body, 'description', 'completed');
 	var todoId = parseInt(req.params.id);
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
-	});
+	var attributes = {};
 
-	if (!matchedTodo) {
-		return res.status(404).json({
-			"error": "todo with that id not found"
-		});
-	}
-
-	body = _.pick(body, 'description', 'completed');
 	var validAttributes = {};
 
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-		validAttributes.completed = body.completed;
-	} else if (body.hasOwnProperty('completed')) {
-		return res.status(400).send();
-	} else {
-		//completed was never provided, oh well, not a biggie
+	if (body.hasOwnProperty('completed')) {
+		attributes.completed = body.completed;
 	}
 
-	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-		validAttributes.description = body.description.trim();
-	} else if (body.hasOwnProperty('description')) {
-		return res.status(400).send();
-	} else {
-		//completed was never provided, oh well, not a biggie
+	if (body.hasOwnProperty('description') && body.description.trim().length > 0) {
+		attributes.description = body.description.trim();
 	}
 
 
-	_.extend(matchedTodo, validAttributes);
-
-	res.json(matchedTodo);
+	db.todo.findById(todoId).then(function(todo) {
+		if (todo) {
+			todo.update(attributes).then(function(todo) {
+				res.json(todo.toJSON());
+			}, function(e) {
+				res.status(400).json(e);
+			});
+		} else {
+			res.status(404).send()
+		}
+	}, function() {
+		res.status(500).send();
+	});
 
 	//JS passes by reference so matchedTodo will actually be updated inside todos array
 
