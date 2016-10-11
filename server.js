@@ -118,7 +118,7 @@ app.put('/todos/:id', function(req, res) {
 				res.status(400).json(e);
 			});
 		} else {
-			res.status(404).send()
+			res.status(404).send();
 		}
 	}, function() {
 		res.status(500).send();
@@ -127,6 +127,20 @@ app.put('/todos/:id', function(req, res) {
 	//JS passes by reference so matchedTodo will actually be updated inside todos array
 
 });
+
+app.post('/users', function(req, res) {
+	var body = _.pick(req.body, 'email', 'password');
+	db.user.create(body).then(function(user) {
+		res.json(user.toJSON());
+	}, function(e) {
+		res.status(400).json(e);
+	});
+
+});
+
+
+
+
 
 db.sequelize.sync().then(function() {
 	app.listen(PORT, function() {
